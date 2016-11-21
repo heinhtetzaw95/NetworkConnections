@@ -38,21 +38,70 @@
 
 using namespace std;
 
+#define maxNodes 9
+#define maxSets 10
+
 void header(ofstream&);
 void footer(ofstream&);
+
+		//setup a structure type Node
+struct node {
+
+			//give node latitude, longitude
+	int lat, lng;
+};
+
+		//setup a structure type Network
+struct network {
+
+			//give network node count and actual nodes
+	int nodeCount;
+	node nodes[maxNodes];
+};
 
 int main() {
 
 			//set up input and output files
-	ifstream infile("data1.txt", ios::in);
+	ifstream infile("Data3.txt", ios::in);
 	ofstream outfile("Output.txt", ios::out);
 
+	network networks[maxSets];
+	
 			//print header section before anything
 	header(outfile);
 
+			//setup number of nodes for the first network and network counter
+	int numNodes = 0;
+	int counter = 0;
+
+			//read in the number of nodes for the first network
+	infile >> numNodes;
+	while (numNodes > 1) {
+
+				//give the firstwork the number of nodes
+		networks[counter].nodeCount = numNodes;
+
+		cout << networks[counter].nodeCount << endl;
+
+				//read in lat and long for each node of the network
+		for (int i = 0; i < networks[counter].nodeCount; i++) {
+			infile >> networks[counter].nodes[i].lat;
+			infile >> networks[counter].nodes[i].lng;
+
+			cout << networks[counter].nodes[i].lat << " | " << networks[counter].nodes[i].lng << endl;
+		}
+
+				//increment the network counter
+		counter++;
+
+				//get number of nodes for the next network
+		infile >> numNodes;
+	}
 
 			//print footer after everything
 	footer(outfile);
+
+	cin.get();
 
 	return 0;
 }
