@@ -204,7 +204,7 @@ int main() {
 
 						//set new node as terminal node
 				from = nextNode;
-			};
+			}
 
 					//increment the connected nodes count for the current network
 			networks[n].connectionCount++;
