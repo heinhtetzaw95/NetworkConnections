@@ -20,7 +20,7 @@
 //*                      of sets is unknown. Each data set begins with a line consisting of a single  *
 //*                      number which indicates the total number of computers in the network. Each    *
 //*                      network has at least two and at most nine computers. A value below this range*
-//*						 signifies the end of the input data. After the initial line in a data set,   *
+//*                      signifies the end of the input data. After the initial line in a data set,   *
 //*                      each additional line gives the coordinates of each computer in the network.  *
 //*                      Each set of coordinates appears on separate lines. These coordinates are     *
 //*                      integers in the range 0 to 150. NO two computers are at the same location    *
@@ -42,6 +42,7 @@ using namespace std;
 		//define maximum numbers for nodes and networks
 #define maxNodes 9
 #define maxNets 10
+#define slack 16
 
 		//setup a structure type Node
 struct node {
@@ -53,24 +54,28 @@ struct node {
 		//setup a structure type Network
 struct network {
 
-			//give network node count and actual nodes
-	node nodes[maxNodes];
-	int nodeCount;
-	int connectionCount = 0;
-	int connection[maxNodes];
-	double shortest = 999999;
-	double distanceMatrix[maxNodes][maxNodes];
+			//set up variables required for each network
+	node nodes[maxNodes];								//actual node information
+	int nodeCount = 0;									//number of nodes in network
+	int connectionCount = 0;							//number of connections in network
+	int connection[maxNodes];							//actual connections from and to nodes
+	double shortest = 9999;								//shortest connection
+	double totalLength = 0;								//total length of cable required for network
+	double connectionLength[maxNodes];					//length for each connection between nodes
+	double distanceMatrix[maxNodes][maxNodes];			//distance matrix for the nodes
 };
 
 		//declare function names to define later
 double getDistance(node, node);
+void printConnection(ofstream&, node, node, double);
+void addFront(int[maxNodes], int, int, double[maxNodes], double);
 void header(ofstream&);
 void footer(ofstream&);
 
 int main() {
 
 			//set up input and output files
-	ifstream infile("testData.txt", ios::in);
+	ifstream infile("Data3.txt", ios::in);
 	ofstream outfile("Output.txt", ios::out);
 
 	network networks[maxNets];
@@ -81,7 +86,6 @@ int main() {
 			//setup number of nodes for the first network and network counter
 	int numNodes = 0;
 	int networkCount = 0;
-	double totalLength = 0;
 
 			//read in the number of nodes for the first network
 	infile >> numNodes;
@@ -107,13 +111,18 @@ int main() {
 	for (int n= 0; n< networkCount; n++) {
 		int from, to;
 
+		outfile << "Network # " << n+1 << endl;
+
 				//find the distance matrix and store the shortest connection
 		for (int i = 0; i < networks[n].nodeCount; i++) {
 			for (int j = i + 1; j < networks[n].nodeCount; j++) {
 
 						//calculate the distance matrix
-				networks[n].distanceMatrix[i][j] = getDistance(networks[n].nodes[i], networks[n].nodes[j]);
-				networks[n].distanceMatrix[j][i] = getDistance(networks[n].nodes[i], networks[n].nodes[j]);
+				networks[n].distanceMatrix[i][j] = 
+					getDistance(networks[n].nodes[i], networks[n].nodes[j]);
+				networks[n].distanceMatrix[j][i] = 
+					getDistance(networks[n].nodes[i], networks[n].nodes[j]);
+
 				if (networks[n].shortest > networks[n].distanceMatrix[i][j]) {
 
 							//store the shortest connection distance
@@ -121,105 +130,157 @@ int main() {
 					from = i;
 					to = j;
 				}
-				//cout << i << " to " << j << " : " << networks[n].distanceMatrix[i][j] << endl;
 			}
 		}
 
 				//store the nodes that are already connected
-		networks[n].connection[networks[n].connectionCount] = to;
-		networks[n].connectionCount++;
 		networks[n].connection[networks[n].connectionCount] = from;
 		networks[n].connectionCount++;
+		networks[n].connection[networks[n].connectionCount] = to;
+		networks[n].connectionCount++;
 
-		totalLength = networks[n].shortest + 16;
-
-		cout << "shortest: " << networks[n].shortest+16 << endl;
-
-		cout << "(" << networks[n].nodes[from].lat << ","
-			<< networks[n].nodes[from].lng << ") connects "
-			<< "(" << networks[n].nodes[to].lat << ","
-			<< networks[n].nodes[to].lng << ")" << endl << endl;
+				//remember the shortest distance
+		networks[n].connectionLength[1] = networks[n].shortest;
 
 				//look for the rest of the connection path
 		for (int i = 0; i < networks[n].nodeCount - 2; i++) {
-			double shortest = 9999;
-			int nextTo;
+			double nextShortest = 9999;
+			int nextNode;
 			bool extendBack;
 
+					//look for which one end to connect next
 			for (int j = 0; j < networks[n].nodeCount ; j++) {
 
-				if (!(find(begin(networks[n].connection), 
+						//connect from the front
+						//check condition if node is already connected AND new node is the shortest
+				if (!(find(begin(networks[n].connection),
 					end(networks[n].connection), j) != end(networks[n].connection))
-					&& shortest > networks[n].distanceMatrix[from][j]) {
+					&& nextShortest > networks[n].distanceMatrix[from][j]) {
 
-					shortest = networks[n].distanceMatrix[from][j];
+							//store the shortest distance
+					nextShortest = networks[n].distanceMatrix[from][j];
+
+							//store next node to connect
+					nextNode = j;
+
+							//connect from the front
 					extendBack = false;
-
-					//cout << "Extend From: " << networks[n].distanceMatrix[from][j] << endl;
-
-					nextTo = j;
 				}
 
-				if (!(find(begin(networks[n].connection), 
+						//connect from the back
+						//check condition if node is already connected AND new node is the shortest
+				if (!(find(begin(networks[n].connection),
 					end(networks[n].connection), j) != end(networks[n].connection))
-					&& shortest > networks[n].distanceMatrix[to][j]) {
+					&& nextShortest > networks[n].distanceMatrix[to][j]) {
 
-					shortest = networks[n].distanceMatrix[to][j];
+							//store the shortest distance
+					nextShortest = networks[n].distanceMatrix[to][j];
+
+							//store next node to connect
+					nextNode = j;
+
+							//connect from the back
 					extendBack = true;
-
-					//cout << "Extend To: " << networks[n].distanceMatrix[to][j] << endl;
-
-					nextTo = j;
 				}
-
 			}
 
-			cout << "Next shortest: " << shortest + 16 << endl;
-
+					//add a new connection that connects at the back
 			if (extendBack) {
-				cout << "(" << networks[n].nodes[to].lat << ","
-					<< networks[n].nodes[to].lng << ") connects "
-					<< "(" << networks[n].nodes[nextTo].lat << ","
-					<< networks[n].nodes[nextTo].lng << ")" << " Extend Back" << endl;
-				to = nextTo;
+
+						//store the new connected node and distance
+				networks[n].connection[networks[n].connectionCount] = nextNode;
+				networks[n].connectionLength[networks[n].connectionCount] = nextShortest;
+
+						//set new node as terminal node
+				to = nextNode;
 			}
+
+					//add a new connection that connects at the front
 			else {
-				cout << "(" << networks[n].nodes[from].lat << ","
-					<< networks[n].nodes[from].lng << ") connects "
-					<< "(" << networks[n].nodes[nextTo].lat << ","
-					<< networks[n].nodes[nextTo].lng << ")" << " Extend Front" << endl;
-				from = nextTo;
+
+						//store the new connected node and distance
+				addFront(networks[n].connection, nextNode, networks[n].connectionCount, 
+					networks[n].connectionLength, nextShortest);
+
+						//set new node as terminal node
+				from = nextNode;
 			};
 
-			totalLength += shortest + 16;
-
-			networks[n].connection[networks[n].connectionCount] = nextTo;
+					//increment the connected nodes count for the current network
 			networks[n].connectionCount++;
-
-			cout << endl;
 		}
 
-		cout << "Total Length: " << totalLength << endl << endl;
-		cout << "================================================" << endl;
+				//tranverse the network
+		for (int i = 1; i < networks[n].connectionCount; i++) {
+
+					//print out the connections and length
+			printConnection(outfile, networks[n].nodes[networks[n].connection[i - 1]], 
+				networks[n].nodes[networks[n].connection[i]], networks[n].connectionLength[i]);
+			
+					//calculate the total distance
+			networks[n].totalLength += networks[n].connectionLength[i];
+		}
+
+				//print out the total length of cable required
+		outfile << "Number of feet of cable required is " << networks[n].totalLength << "." << endl;
+
+				//print out astricks for deviding
+		for (int i = 0; i < 70; i++) outfile << "*";
+		outfile << endl << endl;
 	}
 
 			//print footer after everything
 	footer(outfile);
-
-	cin.get();
-
 	return 0;
 }
+
 
 //*****************************************************************************************************
 double getDistance(node A, node B) {
 
 			// Receives – two nodes
-			// Task - find the distance between two nodes
+			// Task - find the distance between two nodes + slack
 			// Returns - the distance
 
-	return sqrt(pow(A.lat - B.lat, 2) + pow(A.lng - B.lng, 2));
+	return (sqrt(pow(A.lat - B.lat, 2) + pow(A.lng - B.lng, 2)))+slack;
 
+}
+
+//*****************************************************************************************************
+void addFront(int nodes[maxNodes], int addNode, int connections, 
+				double distances[maxNodes], double distance){
+
+			// Receives – storages for connected nodes and distances, new node, number of connections
+			// Task - add the new node to the front of the array
+			// Returns - nothing
+
+			//move every node to 1 place to the back
+	for (int i = connections; i >= 0; i--) {
+		nodes[i] = nodes[i-1];
+		distances[i] = distances[i-1];
+	}
+
+			//add the new node at the beginning
+	nodes[0] = addNode;
+	distances[1] = distance;
+
+	return;
+}
+
+//*****************************************************************************************************
+void printConnection(ofstream &outfile, node A, node B, double distance) {
+
+			// Receives – two nodes and the distance
+			// Task - print out the connection between two nodes
+			// Returns - nothing
+
+			//print out the formatted output for given connection
+	outfile << "Cable required to connect " 
+			<< "(" << A.lat << "," << A.lng << ") to "
+			<< "(" << B.lat << "," << B.lng << ") is " 
+			<< fixed << setprecision(2) << distance << " feet." << endl;
+
+	return;
 }
 
 //*****************************************************************************************************

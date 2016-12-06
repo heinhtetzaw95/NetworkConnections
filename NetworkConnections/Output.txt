@@ -2,6 +2,49 @@
                             Fall 2016       Assignment #3
 -------------------------------------------------------------------------------------
 
+Network # 1
+Cable required to connect (11,27) to (88,30) is 93.06 feet.
+Cable required to connect (88,30) to (95,38) is 26.63 feet.
+Cable required to connect (95,38) to (84,99) is 77.98 feet.
+Cable required to connect (84,99) to (142,81) is 76.73 feet.
+Number of feet of cable required is 274.40.
+**********************************************************************
+
+Network # 2
+Cable required to connect (49,86) to (72,111) is 49.97 feet.
+Cable required to connect (72,111) to (132,73) is 87.02 feet.
+Number of feet of cable required is 136.99.
+**********************************************************************
+
+Network # 3
+Cable required to connect (139,6) to (72,0) is 83.27 feet.
+Cable required to connect (72,0) to (16,16) is 74.24 feet.
+Cable required to connect (16,16) to (10,29) is 30.32 feet.
+Cable required to connect (10,29) to (65,72) is 85.81 feet.
+Cable required to connect (65,72) to (77,80) is 30.42 feet.
+Cable required to connect (77,80) to (34,149) is 97.30 feet.
+Cable required to connect (34,149) to (0,150) is 50.01 feet.
+Cable required to connect (0,150) to (128,144) is 144.14 feet.
+Number of feet of cable required is 595.52.
+**********************************************************************
+
+Network # 4
+Cable required to connect (66,80) to (31,81) is 51.01 feet.
+Cable required to connect (31,81) to (26,56) is 41.50 feet.
+Cable required to connect (26,56) to (59,42) is 51.85 feet.
+Cable required to connect (59,42) to (91,15) is 57.87 feet.
+Cable required to connect (91,15) to (93,6) is 25.22 feet.
+Number of feet of cable required is 227.44.
+**********************************************************************
+
+Network # 5
+Cable required to connect (24,10) to (13,8) is 27.18 feet.
+Cable required to connect (13,8) to (8,11) is 21.83 feet.
+Cable required to connect (8,11) to (8,16) is 21.00 feet.
+Cable required to connect (8,16) to (12,16) is 20.00 feet.
+Number of feet of cable required is 90.01.
+**********************************************************************
+
 
  ----------------------------------
  |      END OF PROGRAM OUTPUT     |
